@@ -1,23 +1,21 @@
-package generator.domain;
+package com.yang.mianshi.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.util.Date;
 import lombok.Data;
 
 /**
- * 题库
- * @TableName question_bank
+ * 题目
+ * @TableName question
  */
-@TableName(value ="question_bank")
+@TableName(value ="question")
 @Data
-public class QuestionBank {
+public class Question {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -26,14 +24,19 @@ public class QuestionBank {
     private String title;
 
     /**
-     * 描述
+     * 内容
      */
-    private String description;
+    private String content;
 
     /**
-     * 图片
+     * 标签列表（json 数组）
      */
-    private String picture;
+    private String tags;
+
+    /**
+     * 推荐答案
+     */
+    private String answer;
 
     /**
      * 创建用户 id
@@ -58,5 +61,6 @@ public class QuestionBank {
     /**
      * 是否删除
      */
+    @TableLogic             //逻辑删除
     private Integer isDelete;
 }
