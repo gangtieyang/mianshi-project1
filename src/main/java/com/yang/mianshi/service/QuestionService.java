@@ -3,6 +3,7 @@ package com.yang.mianshi.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yang.mianshi.common.BaseResponse;
 import com.yang.mianshi.model.dto.question.QuestionQueryRequest;
 import com.yang.mianshi.model.entity.Question;
 import com.yang.mianshi.model.vo.QuestionVO;
@@ -50,4 +51,6 @@ public interface QuestionService extends IService<Question> {
      * @return
      */
     Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request);
+
+    public Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest);
 }

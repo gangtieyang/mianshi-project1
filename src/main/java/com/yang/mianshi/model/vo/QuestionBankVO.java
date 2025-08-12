@@ -1,11 +1,13 @@
 package com.yang.mianshi.model.vo;
 
+import com.yang.mianshi.model.entity.Question;
 import com.yang.mianshi.model.entity.QuestionBank;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
  * 题库视图
@@ -55,6 +57,12 @@ public class QuestionBankVO implements Serializable {
      * 创建用户信息
      */
     private UserVO user;
+
+    /**
+     * 题库里的题目分页
+     */
+    Page<Question> questionPage;
+
 
     /**
      * 封装类转对象
