@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 /**
  * 题库视图
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+ * @author <a href="https://github.com/gangtieyang">钢铁阳</a>
  * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
  */
 @Data
