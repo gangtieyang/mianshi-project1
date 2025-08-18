@@ -135,6 +135,6 @@ public interface UserService extends IService<User> {
      * @param year
      * @return
      */
-    Map<LocalDate, Boolean> getUserSignInRecord(long userId, Integer year);
+    List<Integer> getUserSignInRecord(long userId, Integer year);
 
 }

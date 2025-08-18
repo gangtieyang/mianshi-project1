@@ -296,30 +296,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return true;
     }
     @Override
-    public Map<LocalDate, Boolean> getUserSignInRecord(long userId, Integer year) {
+    public List<Integer> getUserSignInRecord(long userId, Integer year) {
         if (year == null) {
             LocalDate date = LocalDate.now();
             year = date.getYear();
         }
         String key = RedisConstant.getUserSignInRedisKey(year, userId);
-        // 获取Redis的BitMap
         RBitSet signInBitSet = redissonClient.getBitSet(key);
-        // 加载 BitSet 到内存中，避免后续读取时发送多次请求 性能优化
+        // 加载 BitSet 到内存中，避免后续读取时发送多次请求
         BitSet bitSet = signInBitSet.asBitSet();
-        // LinkedHashMap 保证有序
-        Map<LocalDate, Boolean> result = new LinkedHashMap<>();
-        // 获取当前年份的总天数
-        int totalDays = Year.of(year).length();
-        // 依次获取每一天的签到状态
-        for (int dayOfYear = 1; dayOfYear <= totalDays; dayOfYear++) {
-            // 获取 key：当前日期
-            LocalDate currentDate = LocalDate.ofYearDay(year, dayOfYear); //通过年份和天数得到具体的年月日
-            // 获取 value：当天是否有刷题
-            boolean hasRecord = bitSet.get(dayOfYear);
-            // 将结果放入 map
-            result.put(currentDate, hasRecord);
+        // 统计签到的日期
+        List<Integer> dayList = new ArrayList<>();
+        // 从索引 0 开始查找下一个被设置为1的位置
+        int index = bitSet.nextSetBit(0);
+        while (index >= 0){
+            dayList.add(index);
+            // 继续寻找下一个被设置为1的
+            index = bitSet.nextSetBit(index + 1);
         }
-        return result;
+//        // 获取当前年份的总天数
+//        int totalDays = Year.of(year).length();
+//        // 依次获取每一天的签到状态
+//        for (int dayOfYear = 1; dayOfYear <= totalDays; dayOfYear++) {
+//            // 获取 value：当天是否有刷题
+//            boolean hasRecord = bitSet.get(dayOfYear);
+//            if (hasRecord) {
+//                dayList.add(dayOfYear);
+//            }
+//        }
+        return dayList;
     }
+
 
 }
