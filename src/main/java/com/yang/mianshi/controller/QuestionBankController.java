@@ -1,5 +1,8 @@
 package com.yang.mianshi.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.yang.mianshi.annotation.AuthCheck;
@@ -15,20 +18,21 @@ import com.yang.mianshi.model.dto.questionBank.QuestionBankAddRequest;
 import com.yang.mianshi.model.dto.questionBank.QuestionBankEditRequest;
 import com.yang.mianshi.model.dto.questionBank.QuestionBankQueryRequest;
 import com.yang.mianshi.model.dto.questionBank.QuestionBankUpdateRequest;
-import com.yang.mianshi.model.entity.QuestionBank;
 import com.yang.mianshi.model.entity.Question;
+import com.yang.mianshi.model.entity.QuestionBank;
 import com.yang.mianshi.model.entity.User;
 import com.yang.mianshi.model.vo.QuestionBankVO;
 import com.yang.mianshi.service.QuestionBankService;
 import com.yang.mianshi.service.QuestionService;
 import com.yang.mianshi.service.UserService;
-//import com.yang.mianshi.service.questionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
+import static com.yang.mianshi.constant.SentinelConstant.listQuestionBankVOByPage;
 
 /**
  * 题库接口
@@ -137,7 +141,7 @@ public class QuestionBankController {
     /**
      * 根据 id 获取题库（封装类）
      *
-     * @param id
+     * @param
      * @return
      */
     @GetMapping("/get/vo")
@@ -204,6 +208,9 @@ public class QuestionBankController {
      * @return
      */
     @PostMapping("/list/page/vo")
+    @SentinelResource(value = listQuestionBankVOByPage,
+            blockHandler = "handleBlockException",
+            fallback = "handleFallback")
     public BaseResponse<Page<QuestionBankVO>> listQuestionBankVOByPage(@RequestBody QuestionBankQueryRequest questionBankQueryRequest,
                                                                HttpServletRequest request) {
         long current = questionBankQueryRequest.getCurrent();
@@ -215,6 +222,30 @@ public class QuestionBankController {
                 questionBankService.getQueryWrapper(questionBankQueryRequest));
         // 获取封装类
         return ResultUtils.success(questionBankService.getQuestionBankVOPage(questionBankPage, request));
+    }
+
+    /**
+     * listQuestionBankVOByPage 降级操作：直接返回本地数据
+     */
+    public BaseResponse<Page<QuestionBankVO>> handleFallback(@RequestBody QuestionBankQueryRequest questionBankQueryRequest,
+                                                             HttpServletRequest request, Throwable ex) {
+        // 可以返回本地数据或空数据
+        return ResultUtils.success(null);
+    }
+
+    /**
+     * listQuestionBankVOByPage 流控操作
+     * 限流：提示“系统压力过大，请耐心等待”
+     * 熔断：执行降级操作
+     */
+    public BaseResponse<Page<QuestionBankVO>> handleBlockException(@RequestBody QuestionBankQueryRequest questionBankQueryRequest,
+                                                                   HttpServletRequest request, BlockException ex) {
+        // 降级操作
+        if (ex instanceof DegradeException) {
+            return handleFallback(questionBankQueryRequest, request, ex);
+        }
+        // 限流操作
+        return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "系统压力过大，请耐心等待");
     }
 
     /**

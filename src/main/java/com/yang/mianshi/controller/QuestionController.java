@@ -1,11 +1,12 @@
 package com.yang.mianshi.controller;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.EntryType;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.Tracer;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yang.mianshi.annotation.AuthCheck;
 import com.yang.mianshi.common.BaseResponse;
@@ -20,11 +21,9 @@ import com.yang.mianshi.model.dto.question.QuestionEditRequest;
 import com.yang.mianshi.model.dto.question.QuestionQueryRequest;
 import com.yang.mianshi.model.dto.question.QuestionUpdateRequest;
 import com.yang.mianshi.model.entity.Question;
-import com.yang.mianshi.model.entity.QuestionBankQuestion;
 import com.yang.mianshi.model.entity.User;
 import com.yang.mianshi.model.vo.QuestionVO;
 import com.yang.mianshi.service.QuestionBankQuestionService;
-import com.yang.mianshi.service.QuestionBankService;
 import com.yang.mianshi.service.QuestionService;
 import com.yang.mianshi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +33,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+
+import static com.yang.mianshi.constant.SentinelConstant.listQuestionVOByPage;
 
 /**
  * 题目接口
@@ -192,6 +193,63 @@ public class QuestionController {
                 questionService.getQueryWrapper(questionQueryRequest));
         // 获取封装类
         return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+    }
+
+    /**
+     * 分页获取题目列表（封装类 - 限流版）
+     *
+     * @param questionQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/page/vo/sentinel")
+    public BaseResponse<Page<QuestionVO>> listQuestionVOByPageSentinel(@RequestBody QuestionQueryRequest questionQueryRequest,
+                                                               HttpServletRequest request) {
+        long current = questionQueryRequest.getCurrent();
+        long size = questionQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 基于 IP 限流
+        String remoteAddr = request.getRemoteAddr();
+        Entry entry = null;
+        try{
+            entry = SphU.entry(listQuestionVOByPage, EntryType.IN, 1, remoteAddr);
+            // 被保护的逻辑
+            // 查询数据库
+            Page<Question> questionPage = questionService.page(new Page<>(current, size),
+                    questionService.getQueryWrapper(questionQueryRequest));
+            // 获取封装类
+            return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+        } catch(Throwable ex) {
+            // 自定义业务异常
+            if(!BlockException.isBlockException(ex)){
+                Tracer.trace(ex);
+                return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "系统错误");
+            }
+            // 降级操作
+            if (ex instanceof DegradeException){
+                return handleFallback(questionQueryRequest, request, ex);
+            }
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "访问过于频繁，请稍后再试");
+        } finally {
+            if(entry != null){
+                entry.exit(1, remoteAddr);
+            }
+        }
+
+    }
+
+    /**
+     * listQuestionVOByPageSentinel降级操作
+     * @param questionQueryRequest
+     * @param request
+     * @param ex
+     * @return
+     */
+    public BaseResponse<Page<QuestionVO>> handleFallback(@RequestBody QuestionQueryRequest questionQueryRequest,
+                                                             HttpServletRequest request, Throwable ex) {
+        // 可以返回本地数据或空数据
+        return ResultUtils.success(null);
     }
 
     /**
