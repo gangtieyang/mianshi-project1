@@ -27,9 +27,10 @@ import java.util.List;
 public class SentinelRulesManager {
 
     @PostConstruct
-    public void initRules() {
+    public void initRules() throws Exception {
         initFlowRules();
         initDegradeRules();
+        listenRules();
     }
 
     // 限流规则
