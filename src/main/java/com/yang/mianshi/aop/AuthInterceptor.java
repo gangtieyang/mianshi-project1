@@ -8,8 +8,6 @@ import com.yang.mianshi.model.enums.UserRoleEnum;
 import com.yang.mianshi.service.UserService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -23,8 +21,8 @@ import javax.servlet.http.HttpServletRequest;
  * @author <a href="https://github.com/gangtieyang">钢铁阳</a>
  * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class AuthInterceptor {
 
     @Resource

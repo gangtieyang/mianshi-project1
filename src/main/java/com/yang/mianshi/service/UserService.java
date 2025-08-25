@@ -6,12 +6,10 @@ import com.yang.mianshi.model.dto.user.UserQueryRequest;
 import com.yang.mianshi.model.entity.User;
 import com.yang.mianshi.model.vo.LoginUserVO;
 import com.yang.mianshi.model.vo.UserVO;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 用户服务

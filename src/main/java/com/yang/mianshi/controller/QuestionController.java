@@ -1,5 +1,6 @@
 package com.yang.mianshi.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
@@ -167,7 +168,7 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @SaCheckRole(UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest) {
         ThrowUtils.throwIf(questionQueryRequest == null, ErrorCode.PARAMS_ERROR);
         Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
